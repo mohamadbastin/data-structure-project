@@ -53,7 +53,7 @@ class AVLTree:
             self.node = newnode
             self.node.left = AVLTree()
             self.node.right = AVLTree()
-            print("Inserted key [" + str(key) + "]")
+            # print("Inserted key [" + str(key) + "]")
 
         elif key < tree.key:
             self.node.left.insert(patient, key)
@@ -62,7 +62,8 @@ class AVLTree:
             self.node.right.insert(patient, key)
 
         else:
-            print("Key [" + str(key) + "] already in tree.")
+            # print("Key [" + str(key) + "] already in tree.")
+            pass
 
         self.rebalance()
 
@@ -94,7 +95,7 @@ class AVLTree:
 
     def rrotate(self):
         # Rotate left pivoting on self
-        print('Rotating ' + str(self.node.key) + ' right')
+        # print('Rotating ' + str(self.node.key) + ' right')
         A = self.node
         B = self.node.left.node
         T = B.right.node
@@ -105,7 +106,7 @@ class AVLTree:
 
     def lrotate(self):
         # Rotate left pivoting on self
-        print('Rotating ' + str(self.node.key) + ' left')
+        # print('Rotating ' + str(self.node.key) + ' left')
         A = self.node
         B = self.node.right.node
         T = B.left.node
@@ -143,7 +144,7 @@ class AVLTree:
         # print()("Trying to delete at node: " + str(self.node.key))
         if self.node is not None:
             if self.node.key == key and self.node.patient == patient:
-                print("Deleting ... " + str(key))
+                # print("Deleting ... " + str(key))
                 if self.node.left.node is None and self.node.right.node is None:
                     self.node = None  # leaves can be killed at will
                 # if only one subtree, take that
@@ -298,8 +299,8 @@ class PatientBook:
         cls.order_book.insert(patient, patient.order)
         cls.pk_book.insert(patient, patient.pk)
         cls.health_book.insert(patient, patient.health)
-        print(f"patient added. {patient.pk}")
-        print('--------------------------------------------')
+        # print(f"patient added. {patient.pk}")
+        # print('--------------------------------------------')
 
     @classmethod
     def update(cls, patient):
@@ -307,12 +308,13 @@ class PatientBook:
 
     @classmethod
     def delete_first_by_order(cls):
-        cls.display()
-        print("removing first arrived patient")
+        # cls.display()
+        # print("removing first arrived patient")
         patient = cls.order_book.delete_smallest()
         cls.pk_book.delete(patient, patient.pk)
 
-        cls.display()
+        # cls.display()
+        return patient
 
     @classmethod
     def delete_first_by_health(cls):
@@ -331,15 +333,18 @@ class Secretary:
 
     @staticmethod
     def serve_first_patient():
-        PatientBook.delete_first_by_order()
+        patient = PatientBook.delete_first_by_order()
+        print(patient)
 
     @staticmethod
     def serve_sickest_patient():
         PatientBook.delete_first_by_health()
 
 
-Secretary.add_patient(Patient(1, 100))
-Secretary.add_patient(Patient(2, 10))
 Secretary.add_patient(Patient(3, -20))
-
-Secretary.serve_first_patient()
+Secretary.add_patient(Patient(2, 10))
+Secretary.add_patient(Patient(1, 100))
+#
+# Secretary.serve_first_patient()
+# Secretary.serve_first_patient()
+# Secretary.serve_first_patient()

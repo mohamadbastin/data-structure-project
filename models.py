@@ -44,6 +44,21 @@ class AVLTree:
     def is_leaf(self):
         return self.height == 0
 
+    def update(self, key, health):
+        if self.node is not None:
+            if self.node.key == key and self.node.patient.pk == key:
+                self.node.key = health
+                self.node.patient.health = health
+                # print(self.node.patient, self.node.key)
+                self.rebalance()
+                return self.node
+            elif key <= self.node.key:
+                self.node.left.find(key)
+            elif key > self.node.key:
+                self.node.right.find(key)
+        else:
+            return
+
     def insert(self, patient, key):
         tree = self.node
 
@@ -157,11 +172,11 @@ class AVLTree:
                 else:
                     replacement = self.logical_successor(self.node)
                     if replacement is not None:  # sanity check
-                        print("Found replacement for " + str(key) + " -> " + str(replacement.key))
+                        # print("Found replacement for " + str(key) + " -> " + str(replacement.key))
                         self.node.key = replacement.key
 
                         # replaced. Now delete the key from right child
-                        self.node.right.delete(replacement.key)
+                        self.node.right.delete(patient, replacement.key)
 
                 self.rebalance()
                 return
@@ -228,7 +243,7 @@ class AVLTree:
         if node is not None:  # just a sanity check
 
             while node.left is not None:
-                print("LS: traversing: " + str(node.key))
+                # print("LS: traversing: " + str(node.key))
                 if node.left.node is None:
                     return node
                 else:
@@ -262,11 +277,8 @@ class AVLTree:
         return inlist
 
     def display(self, level=0, pref=''):
-        """
-            Display the whole tree. Uses recursive def.
-            TODO: create a better display using breadth-first search
-            """
-        self.update_heights()  # Must update heights before balances
+
+        self.update_heights()
         self.update_balances()
         if self.node is not None:
             print('-' * level * 2, pref, self.node.key, "[" + str(self.height) + ":" + str(
@@ -303,8 +315,17 @@ class PatientBook:
         # print('--------------------------------------------')
 
     @classmethod
-    def update(cls, patient):
-        pass
+    def update(cls, pk, health):
+        # print(pk, health)
+        node = cls.health_book.update(pk, health)
+        # node.patient.health = health
+        # node.key = health
+        # cls.pk_book.rebalance()
+        # cls.health_book.rebalance()
+        # cls.order_book.rebalance()
+        # print(patient
+
+        cls.display()
 
     @classmethod
     def delete_first_by_order(cls):
@@ -312,13 +333,16 @@ class PatientBook:
         # print("removing first arrived patient")
         patient = cls.order_book.delete_smallest()
         cls.pk_book.delete(patient, patient.pk)
-
-        # cls.display()
+        cls.health_book.delete(patient, patient.health)
         return patient
 
     @classmethod
     def delete_first_by_health(cls):
-        pass
+        patient = cls.health_book.delete_smallest()
+        cls.pk_book.delete(patient, patient.pk)
+        cls.order_book.delete(patient, patient.order)
+
+        return patient
 
 
 class Secretary:
@@ -328,8 +352,8 @@ class Secretary:
         PatientBook.add(patient)
 
     @staticmethod
-    def update_patient(patient):
-        PatientBook.update(patient)
+    def update_patient(pk, health):
+        PatientBook.update(pk, health)
 
     @staticmethod
     def serve_first_patient():
@@ -338,13 +362,45 @@ class Secretary:
 
     @staticmethod
     def serve_sickest_patient():
-        PatientBook.delete_first_by_health()
+        patient = PatientBook.delete_first_by_health()
+        print(patient)
 
 
-Secretary.add_patient(Patient(3, -20))
-Secretary.add_patient(Patient(2, 10))
-Secretary.add_patient(Patient(1, 100))
-#
-# Secretary.serve_first_patient()
-# Secretary.serve_first_patient()
-# Secretary.serve_first_patient()
+DEBUG = False
+
+if DEBUG:
+    Secretary.add_patient(Patient(30, -20))
+    Secretary.add_patient(Patient(20000, 10))
+    Secretary.add_patient(Patient(111, 100))
+
+    # Secretary.serve_first_patient()
+    # Secretary.serve_first_patient()
+    # Secretary.serve_first_patient()
+
+    Secretary.serve_sickest_patient()
+    # Secretary.serve_sickest_patient()
+    Secretary.serve_first_patient()
+
+    Secretary.serve_sickest_patient()
+
+else:
+    inputs = []
+    while True:
+        inp = input()
+        if inp == "":
+            break
+        inputs.append(inp)
+
+    for i in inputs:
+        if i[:3] == "Add":
+            patient = Patient(int(i.split()[1]), int(i.split()[2]))
+            Secretary.add_patient(patient)
+
+        elif "Serve First" in i:
+            Secretary.serve_first_patient()
+
+        elif "Serve Sickest" in i:
+            Secretary.serve_sickest_patient()
+
+        elif "Update" in i:
+            Secretary.update_patient(int(i.split()[1]), int(i.split()[2]))

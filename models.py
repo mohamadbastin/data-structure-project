@@ -1,12 +1,13 @@
 # idk wth im doing
 
 class Patient:
-    _order = 103  # to show that order is relative
+    tmp = None
+    _order = 100  # to show that order is relative
 
     def __init__(self, pk, health):
         self.pk = pk
         self.health = health
-        Patient._order += 12
+        Patient._order += 10
         self.order = self._order
 
     def __str__(self):
@@ -30,6 +31,7 @@ class AVLTree:
         self.node = None
         self.height = -1
         self.balance = 0
+        self.tmp = None
 
         # if len(args) == 1:
         #     for i in args[0]:
@@ -44,20 +46,20 @@ class AVLTree:
     def is_leaf(self):
         return self.height == 0
 
-    def update(self, key, health):
-        if self.node is not None:
-            if self.node.key == key and self.node.patient.pk == key:
-                self.node.key = health
-                self.node.patient.health = health
-                # print(self.node.patient, self.node.key)
-                self.rebalance()
-                return self.node
-            elif key <= self.node.key:
-                self.node.left.find(key)
-            elif key > self.node.key:
-                self.node.right.find(key)
-        else:
-            return
+    # def update(self, key, health):
+    #     if self.node is not None:
+    #         if self.node.key == key and self.node.patient.pk == key:
+    #             self.node.key = health
+    #             self.node.patient.health = health
+    #             # print(self.node.patient, self.node.key)
+    #             self.rebalance()
+    #             return self.node
+    #         elif key <= self.node.key:
+    #             self.node.left.find(key)
+    #         elif key > self.node.key:
+    #             self.node.right.find(key)
+    #     else:
+    #         return
 
     def insert(self, patient, key):
         tree = self.node
@@ -155,11 +157,17 @@ class AVLTree:
         else:
             self.balance = 0
 
-    def delete(self, patient, key):
-        # print()("Trying to delete at node: " + str(self.node.key))
+    def delete(self, pk, key, flag=True):
+        # print("Trying to delete at node: " + str(key, pk))
+        # print(pk)
+        # print(key)
+        # the_node = None
         if self.node is not None:
-            if self.node.key == key and self.node.patient == patient:
-                # print("Deleting ... " + str(key))
+            if self.node.key == key and self.node.patient.pk == pk:
+                # the_node = self.node
+                if flag:
+                    Patient.tmp = self.node.patient
+                # print("Deleting ... " + str(self.node))
                 if self.node.left.node is None and self.node.right.node is None:
                     self.node = None  # leaves can be killed at will
                 # if only one subtree, take that
@@ -174,51 +182,56 @@ class AVLTree:
                     if replacement is not None:  # sanity check
                         # print("Found replacement for " + str(key) + " -> " + str(replacement.key))
                         self.node.key = replacement.key
+                        self.node.patient = replacement.patient
 
                         # replaced. Now delete the key from right child
-                        self.node.right.delete(patient, replacement.key)
+                        self.node.right.delete(patient.pk, replacement.key, flag=False)
 
                 self.rebalance()
                 return
             elif key <= self.node.key:
-                self.node.left.delete(patient, key)
+                self.node.left.delete(pk, key)
             elif key > self.node.key:
-                self.node.right.delete(patient, key)
+                self.node.right.delete(pk, key)
 
             self.rebalance()
         else:
             return
 
-    def delete_first_node(self):
-        first_node = self.node
-        print("Deleting First Node ... ")
-        if self.node.left.node is None and self.node.right.node is None:
-            self.node = None  # leaves can be killed at will
-        # if only one subtree, take that
-        elif self.node.left.node is None:
-            self.node = self.node.right.node
-        elif self.node.right.node is None:
-            self.node = self.node.left.node
-
-        # worst-case: both children present. Find logical successor
-        else:
-            replacement = self.logical_successor(self.node)
-            if replacement is not None:  # sanity check
-                # print("Found replacement for " + str(key) + " -> " + str(replacement.key))
-                self.node.key = replacement.key
-
-                # replaced. Now delete the key from right child
-                self.node.right.delete(replacement.key)
-
-        self.rebalance()
-        # return first_node
+    # def delete_first_node(self):
+    #     first_node = self.node
+    #     print("Deleting First Node ... ")
+    #     if self.node.left.node is None and self.node.right.node is None:
+    #         self.node = None  # leaves can be killed at will
+    #     # if only one subtree, take that
+    #     elif self.node.left.node is None:
+    #         self.node = self.node.right.node
+    #     elif self.node.right.node is None:
+    #         self.node = self.node.left.node
+    #
+    #     # worst-case: both children present. Find logical successor
+    #     else:
+    #         replacement = self.logical_successor(self.node)
+    #         if replacement is not None:  # sanity check
+    #             # print("Found replacement for " + str(key) + " -> " + str(replacement.key))
+    #             self.node.key = replacement.key
+    #
+    #             # replaced. Now delete the key from right child
+    #             self.node.right.delete(replacement.key)
+    #
+    #     self.rebalance()
+    #     # return first_node
 
     def delete_smallest(self):
         node = self.node
+        if node.left is None and node.right is None:
+            nn = node.patient
+            self.delete(node.patient.pk, node.key)
+            return nn
         while node.left.node is not None:
             node = node.left.node
         nn = node
-        self.delete(node.patient, node.key)
+        self.delete(node.patient.pk, node.key)
         return nn.patient
 
     #
@@ -281,8 +294,8 @@ class AVLTree:
         self.update_heights()
         self.update_balances()
         if self.node is not None:
-            print('-' * level * 2, pref, self.node.key, "[" + str(self.height) + ":" + str(
-                self.balance) + "]", 'L' if self.is_leaf() else ' ')
+            print('-' * level * 2, pref, self.node.key, "[" + str(self.node.patient) + "]",
+                  'L' if self.is_leaf() else ' ')
             if self.node.left is not None:
                 self.node.left.display(level + 1, '<')
             if self.node.left is not None:
@@ -316,31 +329,41 @@ class PatientBook:
 
     @classmethod
     def update(cls, pk, health):
-        # print(pk, health)
-        node = cls.health_book.update(pk, health)
-        # node.patient.health = health
-        # node.key = health
-        # cls.pk_book.rebalance()
-        # cls.health_book.rebalance()
-        # cls.order_book.rebalance()
-        # print(patient
+        # node = cls.health_book.update(pk, health)
 
-        cls.display()
+        # cls.display()
+
+        cls.pk_book.delete(pk, pk)
+        p = Patient.tmp
+        cls.health_book.delete(pk, p.health)
+        cls.order_book.delete(pk, p.order)
+
+        new_p = Patient(pk, health)
+        new_p.order = p.order - 1
+        # print(new_p)
+
+        cls.pk_book.insert(new_p, new_p.pk)
+        cls.order_book.insert(new_p, new_p.order)
+        cls.health_book.insert(new_p, new_p.health)
+
+        # cls.display()
 
     @classmethod
     def delete_first_by_order(cls):
         # cls.display()
         # print("removing first arrived patient")
         patient = cls.order_book.delete_smallest()
-        cls.pk_book.delete(patient, patient.pk)
-        cls.health_book.delete(patient, patient.health)
+        cls.pk_book.delete(patient.pk, patient.pk)
+        cls.health_book.delete(patient.pk, patient.health)
+
+        # cls.display()
         return patient
 
     @classmethod
     def delete_first_by_health(cls):
         patient = cls.health_book.delete_smallest()
-        cls.pk_book.delete(patient, patient.pk)
-        cls.order_book.delete(patient, patient.order)
+        cls.pk_book.delete(patient.pk, patient.pk)
+        cls.order_book.delete(patient.pk, patient.order)
 
         return patient
 
